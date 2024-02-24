@@ -1,0 +1,63 @@
+#!/bin/bash
+
+KEY_NAME=""
+REPO_URL=""
+REPO_NAME=""
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    -h)
+      echo "USAGE: gitcb -k [KEY_FILE] -r [REMOTE_URL] -l [REPO_NAME]"
+      echo "Options:"
+      echo " -k    SSH key"
+      echo " -r    Remote url of Repo"
+      echo " -l    Local Repo name"
+      exit 0
+      ;;
+    -k)
+      KEY_NAME="$2"
+      if [ -z "$KEY_NAME" ]; then
+        echo "ERROR: Missing argument for -k option"
+        exit 1
+      fi
+      shift
+      ;;
+    -r)
+      REPO_URL="$2"
+      if [ -z "$REPO_URL" ]; then
+        echo "ERROR: Missing argument for -r option"
+        exit 1
+      fi
+      shift
+      ;;
+    -l)
+      REPO_NAME="$2"
+      if [ -z "$REPO_NAME" ]; then
+        echo "ERROR: Missing argument for -l option"
+        exit 1
+      fi
+      shift
+      ;;
+    *)
+      echo "Unknown option: $1"
+      exit 1
+      ;;
+  esac
+  shift
+done
+
+if [[ $REPO_URL = "" ]]; then
+  echo "No Remote URL given"
+  exit 0
+fi
+
+if [[ $REPO_NAME = "" ]]; then
+  REPO_NAME=$(basename "${REPO_URL}" .git)
+fi
+
+if [[ $KEY_NAME = "" ]]; then
+  git clone --bare "${REPO_URL}" "${REPO_NAME}"
+else
+  ssh-agent bash -c "ssh-add ~/.ssh/${KEY_NAME} ; git clone --bare ${REPO_URL} ${REPO_NAME}"
+fi
+
